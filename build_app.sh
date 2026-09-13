@@ -4,6 +4,7 @@
 #
 #   ./build_app.sh              build + install once
 #   ./build_app.sh --no-install build the .app next to the sources only
+#   ./build_app.sh --dmg        build the .app and package it as Duo.dmg (no install)
 #   ./build_app.sh --watch      rebuild + reinstall + relaunch on every change
 #
 # Signs with the Apple Development identity when it is present so the Screen Recording
@@ -19,6 +20,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 APP="$HERE/$APP_NAME.app"
 CONTENTS="$APP/Contents"
 DEST="/Applications/$APP_NAME.app"
+DMG="$HERE/$APP_NAME.dmg"
 
 make_icon() {
   set +e
@@ -153,6 +155,18 @@ PLIST
   fi
 }
 
+make_dmg() {
+  echo "==> packaging $APP_NAME.dmg"
+  local stage; stage="$(mktemp -d)"
+  cp -R "$APP" "$stage/"
+  ln -s /Applications "$stage/Applications"
+  rm -f "$DMG"
+  hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$stage" -ov -format UDZO "$DMG" \
+    || { rm -rf "$stage"; echo "==> hdiutil failed"; return 1; }
+  rm -rf "$stage"
+  echo "    built: $DMG ($(du -h "$DMG" | cut -f1))"
+}
+
 sources_signature() {
   find "$HERE/Sources" "$HERE/Shaders" "$HERE/Tools/gen_shader.sh" "$HERE/Package.swift" -type f \
     -not -name ShaderSource.swift -exec stat -f '%m %N' {} + 2>/dev/null \
@@ -162,6 +176,9 @@ sources_signature() {
 case "${1:-}" in
   --no-install)
     NO_INSTALL=1 build_and_install
+    ;;
+  --dmg)
+    NO_INSTALL=1 build_and_install && make_dmg
     ;;
   --watch)
     echo "Watching Sources/ and Shaders/ — edit a file and the installed app updates automatically."

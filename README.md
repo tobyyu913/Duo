@@ -9,18 +9,33 @@ as the screen swings up.
 Menu-bar only. Does nothing (no capture stream, no GPU work, no overlay) while the lid rests;
 the only background cost is a cheap 60 Hz feature read of the lid-angle sensor.
 
+## Download
+
+**[⬇ Download Duo.dmg](https://github.com/tobyyu913/Duo/releases/latest/download/Duo.dmg)** — latest
+release, ~650 KB. Open the DMG, drag **Duo** to **Applications**, launch it, and grant Screen
+Recording when asked. Duo lives in the menu bar (laptop glyph); enable *Launch at Login* from
+there if you want it always on.
+
+Duo is signed but not notarized, so the first launch on macOS 15+ goes like this: double-click
+Duo → macOS says it *"could not verify"* the app → click **Done** → open **System Settings ›
+Privacy & Security**, scroll to the bottom and click **Open Anyway** → confirm. That's a one-time
+step; every launch after that is normal.
+
+All releases: <https://github.com/tobyyu913/Duo/releases>
+
 ## Requirements
 
 - Apple Silicon MacBook with a lid-angle sensor (verified on a 16" MacBook Pro M4 Max), macOS 15+.
 - Screen Recording permission (System Settings › Privacy & Security › Screen Recording). Duo
   asks once on first launch; the menu offers "Grant Screen Recording…" afterwards.
-- Xcode / Swift 5.9+ toolchain to build. No third-party dependencies.
+- Xcode / Swift 5.9+ toolchain, only if building from source. No third-party dependencies.
 
-## Build and install
+## Build from source
 
 ```
 ./build_app.sh              # build release, assemble Duo.app, sign, install to /Applications
 ./build_app.sh --no-install # just assemble Duo.app next to the sources
+./build_app.sh --dmg        # assemble Duo.app and package it as Duo.dmg (what the releases ship)
 ./build_app.sh --watch      # rebuild + reinstall + relaunch whenever Sources/ or Shaders/ change
 ```
 
@@ -152,7 +167,7 @@ passthrough rule). Point the same command at `Shaders/variant_*.metal` to compar
 
 ```
 Package.swift
-build_app.sh                 build / sign / install (see above)
+build_app.sh                 build / sign / install / package DMG (see above)
 Sources/Duo/
   main.swift                 NSApplication (.accessory) + AppDelegate
   AppModel.swift             wires everything; sleep/wake, displays, power, preview, pacing
